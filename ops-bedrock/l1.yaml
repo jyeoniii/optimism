@@ -1,0 +1,63 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: l1
+  name: l1
+spec:
+  type: LoadBalancer
+  ports:
+    - name: "8545"
+      port: 8545
+      targetPort: 8545
+  selector:
+    app: l1
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: l1
+  name: l1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: l1
+  template:
+    metadata:
+      labels:
+        app: l1
+    spec:
+      containers:
+        - image: l1:latest
+          imagePullPolicy: Never
+          name: l1
+          ports:
+            - containerPort: 8545
+          resources: {}
+          volumeMounts:
+            - mountPath: /db
+              name: l1-data
+            - mountPath: /genesis.json
+              name: l1-claim1
+            - mountPath: /config/test-jwt-secret.txt
+              name: l1-claim2
+      volumes:
+        - name: l1-claim1
+          hostPath:
+            path: /optimism/.devnet/genesis-l1.json
+            type: File
+        - name: l1-claim2
+          hostPath:
+            path: /optimism/ops-bedrock/test-jwt-secret.txt
+            type: File
+  volumeClaimTemplates:
+    - metadata:
+        name: l1-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 100Mi

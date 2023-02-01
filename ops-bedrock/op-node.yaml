@@ -1,0 +1,111 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: op-node
+  name: op-node
+spec:
+  type: LoadBalancer
+  ports:
+    - name: "7545"
+      port: 7545
+      targetPort: 8545
+    - name: "9003"
+      port: 9003
+      targetPort: 9003
+    - name: "7300"
+      port: 7300
+      targetPort: 7300
+    - name: "6060"
+      port: 6060
+      targetPort: 6060
+  selector:
+    app: op-node
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: op-node
+  name: op-node
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: op-node
+  template:
+    metadata:
+      labels:
+        app: op-node
+    spec:
+      containers:
+        - args:
+            - op-node
+            - --l1=ws://l1:8546
+            - --l2=http://l2:8551
+            - --l2.jwt-secret=/config/test-jwt-secret.txt
+            - --sequencer.enabled
+            - --sequencer.l1-confs=0
+            - --verifier.l1-confs=0
+            - --p2p.sequencer.key=8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba
+            - --rollup.config=/rollup.json
+            - --rpc.addr=0.0.0.0
+            - --rpc.port=8545
+            - --p2p.listen.ip=0.0.0.0
+            - --p2p.listen.tcp=9003
+            - --p2p.listen.udp=9003
+            - --snapshotlog.file=/op_log/snapshot.log
+            - --p2p.priv.path=/config/p2p-node-key.txt
+            - --metrics.enabled
+            - --metrics.addr=0.0.0.0
+            - --metrics.port=7300
+            - --pprof.enabled
+          image: op-node:latest
+          imagePullPolicy: Never
+          name: op-node
+          ports:
+            - containerPort: 8545
+            - containerPort: 9003
+            - containerPort: 7300
+            - containerPort: 6060
+          resources: {}
+          volumeMounts:
+            - mountPath: /config/p2p-sequencer-key.txt
+              name: op-node-claim0
+            - mountPath: /config/p2p-node-key.txt
+              name: op-node-claim1
+            - mountPath: /config/test-jwt-secret.txt
+              name: op-node-claim2
+            - mountPath: /rollup.json
+              name: op-node-claim3
+            - mountPath: /op_log
+              name: op-log
+      restartPolicy: Always
+      volumes:
+        - name: op-node-claim0
+          hostPath:
+            path: /optimism/ops-bedrock/p2p-sequencer-key.txt
+            type: FileOrCreate
+        - name: op-node-claim1
+          hostPath:
+            path: /optimism/ops-bedrock/p2p-node-key.txt
+            type: File
+        - name: op-node-claim2
+          hostPath:
+            path: /optimism/ops-bedrock/test-jwt-secret.txt
+            type: File
+        - name: op-node-claim3
+          hostPath:
+            path: /optimism/.devnet/rollup.json
+            type: File
+  volumeClaimTemplates:
+    - metadata:
+        name: op-log
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 100Mi
