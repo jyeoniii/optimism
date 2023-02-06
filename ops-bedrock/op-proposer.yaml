@@ -3,15 +3,15 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: op-proposer
-  name: op-proposer
+    app: op-proposer-svc
+  name: op-proposer-svc
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   ports:
-    - name: "6062"
+    - name: "pprof-port"
       port: 6062
       targetPort: 6060
-    - name: "7302"
+    - name: "metrics-port"
       port: 7302
       targetPort: 7300
   selector:
@@ -39,7 +39,7 @@ spec:
             - name: OP_PROPOSER_ALLOW_NON_FINALIZED
               value: "true"
             - name: OP_PROPOSER_L1_ETH_RPC
-              value: http://l1:8545
+              value: http://l1-svc:8545
             - name: OP_PROPOSER_L2OO_ADDRESS
               value: "0x6900000000000000000000000000000000000000"
             - name: OP_PROPOSER_L2_OUTPUT_HD_PATH
@@ -59,10 +59,10 @@ spec:
             - name: OP_PROPOSER_RESUBMISSION_TIMEOUT
               value: 30s
             - name: OP_PROPOSER_ROLLUP_RPC
-              value: http://op-node:8545
+              value: http://op-node-svc:7545
             - name: OP_PROPOSER_SAFE_ABORT_NONCE_TOO_LOW_COUNT
               value: "3"
-          image: op-proposer
+          image: ops-bedrock_op-proposer
           imagePullPolicy: Never
           name: op-proposer
           ports:

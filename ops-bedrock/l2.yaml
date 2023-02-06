@@ -3,14 +3,17 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: l2
-  name: l2
+    app: l2-svc
+  name: l2-svc
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   ports:
-    - name: "9545"
+    - name: "eth-rpc-port"
       port: 9545
       targetPort: 8545
+    - name: "rollup-port"
+      port: 8551
+      targetPort: 8551
   selector:
     app: l2
 ---
@@ -21,6 +24,7 @@ metadata:
     app: l2
   name: l2
 spec:
+  serviceName: l2-svc
   replicas: 1
   selector:
     matchLabels:
@@ -35,11 +39,12 @@ spec:
             - /bin/sh
             - /entrypoint.sh
             - --authrpc.jwtsecret=/config/test-jwt-secret.txt
-          image: l2:latest
+          image: ops-bedrock_l2:latest
           imagePullPolicy: Never
           name: l2
           ports:
             - containerPort: 8545
+            - containerPort: 8551
           resources: {}
           volumeMounts:
             - mountPath: /db

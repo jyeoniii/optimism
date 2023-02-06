@@ -3,12 +3,12 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: stateviz
-  name: stateviz
+    app: stateviz-svc
+  name: stateviz-svc
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   ports:
-    - name: "9090"
+    - name: "stateviz-svc"
       port: 9090
       targetPort: 8080
   selector:
@@ -21,6 +21,7 @@ metadata:
     app: stateviz
   name: stateviz
 spec:
+  serviceName: stateviz-svc
   replicas: 1
   selector:
     matchLabels:
@@ -36,7 +37,7 @@ spec:
             - -addr=0.0.0.0:8080
             - -snapshot=/op_log/snapshot.log
             - -refresh=10s
-          image: stateviz
+          image: ops-bedrock_stateviz
           imagePullPolicy: Never
           name: stateviz
           ports:
@@ -47,11 +48,7 @@ spec:
               name: op-log
               readOnly: true
       restartPolicy: Always
-  volumeClaimTemplates:
-    - metadata:
-        name: op-log
-      spec:
-        accessModes: [ "ReadWriteOnce" ]
-        resources:
-          requests:
-            storage: 100Mi
+      volumes:
+        - name: op-log
+          persistentVolumeClaim:
+            claimName: op-log-pvc

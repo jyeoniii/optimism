@@ -3,14 +3,17 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: l1
-  name: l1
+    app: l1-svc
+  name: l1-svc
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   ports:
-    - name: "8545"
+    - name: "eth-rpc-port"
       port: 8545
       targetPort: 8545
+    - name: "eth-ws-port"
+      port: 8546
+      targetPort: 8546
   selector:
     app: l1
 ---
@@ -21,6 +24,7 @@ metadata:
     app: l1
   name: l1
 spec:
+  serviceName: l1-svc
   replicas: 1
   selector:
     matchLabels:
@@ -31,11 +35,12 @@ spec:
         app: l1
     spec:
       containers:
-        - image: l1:latest
+        - image: ops-bedrock_l1:latest
           imagePullPolicy: Never
           name: l1
           ports:
             - containerPort: 8545
+            - containerPort: 8546
           resources: {}
           volumeMounts:
             - mountPath: /db

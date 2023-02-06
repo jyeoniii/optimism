@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: op-log-pv
+spec:
+  accessModes:
+    - ReadWriteOnce
+  claimRef:
+    namespace: default
+    name: op-log-pvc
+  capacity:
+    storage: 100Mi
+  hostPath:
+    path: /var/local-path-provisioner/op-log
+    type: DirectoryOrCreate
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: standard
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: default
+  name: op-log-pvc
+spec:
+  storageClassName: standard
+  volumeName: op-log-pv
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Mi

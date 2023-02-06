@@ -3,21 +3,21 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: op-node
-  name: op-node
+    app: op-node-svc
+  name: op-node-svc
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   ports:
-    - name: "7545"
+    - name: "eth-rpc-port"
       port: 7545
       targetPort: 8545
-    - name: "9003"
+    - name: "p2p-port"
       port: 9003
       targetPort: 9003
-    - name: "7300"
+    - name: "metrics-port"
       port: 7300
       targetPort: 7300
-    - name: "6060"
+    - name: "pprof-port"
       port: 6060
       targetPort: 6060
   selector:
@@ -32,6 +32,7 @@ metadata:
     app: op-node
   name: op-node
 spec:
+  serviceName: op-node-svc
   replicas: 1
   selector:
     matchLabels:
@@ -44,8 +45,8 @@ spec:
       containers:
         - args:
             - op-node
-            - --l1=ws://l1:8546
-            - --l2=http://l2:8551
+            - --l1=ws://l1-svc:8546
+            - --l2=http://l2-svc:8551
             - --l2.jwt-secret=/config/test-jwt-secret.txt
             - --sequencer.enabled
             - --sequencer.l1-confs=0
@@ -63,7 +64,7 @@ spec:
             - --metrics.addr=0.0.0.0
             - --metrics.port=7300
             - --pprof.enabled
-          image: op-node:latest
+          image: ops-bedrock_op-node:latest
           imagePullPolicy: Never
           name: op-node
           ports:
@@ -101,11 +102,6 @@ spec:
           hostPath:
             path: /optimism/.devnet/rollup.json
             type: File
-  volumeClaimTemplates:
-    - metadata:
-        name: op-log
-      spec:
-        accessModes: [ "ReadWriteOnce" ]
-        resources:
-          requests:
-            storage: 100Mi
+        - name: op-log
+          persistentVolumeClaim:
+            claimName: op-log-pvc
