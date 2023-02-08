@@ -1,31 +1,48 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: example-ingress
+  name: optimism-ingress
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
 spec:
   rules:
-    - http:
+    - host: l1-rpc.iskra.world
+      http:
         paths:
           - pathType: Prefix
-            path: /l1(/|$)(.*)
+            path: /(.*)
             backend:
               service:
                 name: l1-svc
                 port:
                   number: 8545
+    - host: l2-rpc.iskra.world
+      http:
+        paths:
           - pathType: Prefix
-            path: /l2(/|$)(.*)
+            path: /(.*)
             backend:
               service:
                 name: l2-svc
                 port:
                   number: 9545
+    - host: op-node-rpc.iskra.world
+      http:
+        paths:
           - pathType: Prefix
-            path: /op-node(/|$)(.*)
+            path: /(.*)
             backend:
               service:
                 name: op-node-svc
                 port:
                   number: 7545
+    - host: l1-explorer.iskra.world
+      http:
+        paths:
+          - pathType: Prefix
+            path: /(.*)
+            backend:
+              service:
+                name: blockscout-svc
+                port:
+                  number: 4000
