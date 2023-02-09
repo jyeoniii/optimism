@@ -3,8 +3,8 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: blockscout-svc
-  name: blockscout-svc
+    app: blockscout-l1-svc
+  name: blockscout-l1-svc
 spec:
   type: ClusterIP
   ports:
@@ -12,25 +12,25 @@ spec:
       port: 4000
       targetPort: 4000
   selector:
-    app: blockscout
+    app: blockscout-l1
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: blockscout
-  name: blockscout
+    app: blockscout-l1
+  name: blockscout-l1
   namespace: default
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
   selector:
     matchLabels:
-      app: blockscout
+      app: blockscout-l1
   template:
     metadata:
       labels:
-        app: blockscout
+        app: blockscout-l1
     spec:
       containers:
         - image: blockscout/blockscout:latest
@@ -54,9 +54,7 @@ spec:
             - name: ETHEREUM_JSONRPC_TRACE_URL
               value: 'http://l1-svc:8545'
             - name: DATABASE_URL
-              value: 'postgresql://postgres:password@postgres-postgresql:5432/blockscout?ssl=false'
-            - name: ECTO_USE_SSL
-              value: 'false'
+              value: 'postgresql://postgres:password@postgres-postgresql:5432/blockscout_l1?ssl=false'
             - name: SECRET_KEY_BASE
               value: '56NtB48ear7+wMSf0IQuWDAAazhpb31qyc7GiyspBP2vh7t5zlCsF5QDv76chXeN'
             - name: ACCOUNT_REDIS_URL
@@ -69,6 +67,15 @@ spec:
           name: visualizer
           ports:
             - containerPort: 8050
+              protocol: TCP
+          env:
+            - name: VISUALIZER__SERVER__GRPC__ENABLED
+              value: 'false'
+        - image: ghcr.io/blockscout/smart-contract-verifier:latest
+          imagePullPolicy: Always
+          name: smart-contract-verifier
+          ports:
+            - containerPort: 8043
               protocol: TCP
           env:
             - name: VISUALIZER__SERVER__GRPC__ENABLED

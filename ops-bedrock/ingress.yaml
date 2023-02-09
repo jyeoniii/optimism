@@ -43,6 +43,26 @@ spec:
             path: /(.*)
             backend:
               service:
-                name: blockscout-svc
+                name: blockscout-l1-svc
                 port:
                   number: 4000
+    - host: l2-explorer.iskra.world
+      http:
+        paths:
+            - pathType: Prefix
+              path: /(.*)
+              backend:
+                service:
+                  name: blockscout-l2-svc
+                  port:
+                    number: 4000
+    - host: l2-explorer.iskra.world
+      http:
+        paths:
+            - pathType: Prefix
+              path: /optimism/bedrock-beta/(.*)
+              backend:
+                service:
+                  name: blockscout-l2-svc
+                  port:
+                    number: 4000
